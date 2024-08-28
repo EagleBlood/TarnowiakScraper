@@ -1,3 +1,4 @@
+import random
 import requests
 from bs4 import BeautifulSoup
 import time
@@ -98,14 +99,15 @@ def check_new_entries(url):
             print(f"Link: {full_link}")
             print('-' * 40)
 
-def listener(interval=60):
+def listener():
     print("Starting listener... Press Ctrl+C to stop.")
     try:
         while True:
             for url in urls:
                 check_new_entries(url)
+            interval = random.randint(45, 95)
             time.sleep(interval)
     except KeyboardInterrupt:
         print("Listener stopped.")
 
-listener(interval=60)
+listener()
