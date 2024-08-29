@@ -82,6 +82,14 @@ def check_new_entries(url):
         car_link = box.find('a', class_='more')['href']
         full_link = urljoin(url, car_link)
 
+        # Extract the image link
+        img_tag = box.find('div', class_='box_content_photo').find('img')
+        if img_tag:
+            img_src = img_tag['src']
+            full_img_link = urljoin('https://www.tarnowiak.pl/', img_src)
+        else:
+            full_img_link = "Unknown"
+
         # Check if the date contains "dzisiaj" and if the entry is new
         if "dzisiaj" in car_date and car_link not in seen_entries[url]:
             # Add the entry to the set of seen entries for this URL
@@ -97,7 +105,24 @@ def check_new_entries(url):
             print(f"Price: {car_price}")
             print(f"Date Added: {car_date.replace('Dodane: ', '')}")
             print(f"Link: {full_link}")
+            print(f"Image Link: {full_img_link}")
             print('-' * 40)
+
+            # Send the data to the Node.js server
+            data = {
+                'url': url,
+                'car_name': car_name,
+                'description': car_desc,
+                'price': car_price,
+                'date_added': car_date.replace('Dodane: ', ''),
+                'link': full_link,
+                'imgLink': full_img_link
+            }
+            try:
+                response = requests.post('http://localhost:4000/api/carData', json=data)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Failed to send data to the server. Error: {e}")
 
 def listener():
     print("Starting listener... Press Ctrl+C to stop.")

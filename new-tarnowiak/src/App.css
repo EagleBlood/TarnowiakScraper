@@ -87,18 +87,21 @@ h2 {
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  min-width: 250px;
+  max-height: 100px;
   user-select: none; /* Prevent text selection */
 }
 
 .sectionBarItemInfo {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+
   user-select: none; /* Prevent text selection */
   gap: 10px;
+  overflow: hidden; /* Hide overflow */
+  white-space: nowrap; /* Prevent text from wrapping */
+  text-overflow: ellipsis; /* Add ellipsis (...) for overflowed text */
 }
-
 .img {
   width: 100px;
   height: 100px;
