@@ -22,6 +22,7 @@ h2 {
   color: white;
 }
 
+
 .app {
   display: flex;
   flex-direction: column;
@@ -52,12 +53,10 @@ h2 {
   gap: 20px;
 }
 
-
-
 .sectionBar {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
+  align-items: center;
   justify-content: flex-start;
   padding: 30px 30px;
   width: 100%;
@@ -66,6 +65,7 @@ h2 {
   border-radius: 30px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
   overflow-x: auto; /* Enable horizontal scrolling */
+  overflow-y: hidden; /* Disable vertical scrolling */
   gap: 30px;
   user-select: none; /* Prevent text selection */
   scroll-behavior: smooth; /* Enable smooth scrolling */
@@ -86,21 +86,27 @@ h2 {
   display: flex;
   flex-direction: row;
   align-items: center;
+  justify-content: left; /* Center horizontally */
   gap: 10px;
-  min-width: 250px;
-  max-height: 100px;
+  min-width: 300px;
+  max-height: 150px;
   user-select: none; /* Prevent text selection */
+  margin: 0 auto; /* Center horizontally within the container */
+  text-align: left; /* Align content to the left */
 }
 
 .sectionBarItemInfo {
   display: flex;
   flex-direction: column;
-
   user-select: none; /* Prevent text selection */
   gap: 10px;
   overflow: hidden; /* Hide overflow */
   white-space: nowrap; /* Prevent text from wrapping */
   text-overflow: ellipsis; /* Add ellipsis (...) for overflowed text */
+}
+
+.sectionBarItemInfo strong {
+  white-space: wrap; /* Allow text to wrap */
 }
 .img {
   width: 100px;
@@ -110,6 +116,15 @@ h2 {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+a:visited .img {
+  background-color: red !important;
+  opacity: 0.5 !important;
+  filter: grayscale(100%) !important;
+  border: 2px solid red !important;
+  transform: scale(0.9) !important;
+  box-shadow: none !important;
 }
 
 

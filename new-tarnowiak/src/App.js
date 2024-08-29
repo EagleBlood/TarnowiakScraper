@@ -1,8 +1,33 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './App.css';
-import Tarnowiak from './components/Tarnowiak/Tarnowiak';
+import Tarnowiak from './components/Tarnowiak/tarnowiak';
+import Otomoto from './components/Otomoto/otomoto';
+import OLX from './components/OLX/olx';
 
 function App() {
+  useEffect(() => {
+    const handleWheel = (event) => {
+      if (event.deltaX !== 0) {
+        event.preventDefault();
+        event.currentTarget.scrollLeft += event.deltaX;
+      }
+      if (event.deltaY !== 0) {
+        event.preventDefault();
+      }
+    };
+
+    const sectionBars = document.querySelectorAll('.sectionBar');
+    sectionBars.forEach((bar) => {
+      bar.addEventListener('wheel', handleWheel);
+    });
+
+    return () => {
+      sectionBars.forEach((bar) => {
+        bar.removeEventListener('wheel', handleWheel);
+      });
+    };
+  }, []);
+
   return (
     <div className="body">
       <div className="menu">
@@ -12,6 +37,8 @@ function App() {
       </div>
       <div className="app">
         <Tarnowiak />
+        <OLX />
+        <Otomoto />
       </div>
     </div>
   );

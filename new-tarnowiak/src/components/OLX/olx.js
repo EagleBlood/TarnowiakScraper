@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-function Tarnowiak() {
+function OLX() {
   const [carData, setCarData] = useState([]);
   const sectionBarRef = useRef(null); // Define the ref
 
@@ -10,7 +10,7 @@ function Tarnowiak() {
       .then(response => response.json())
       .then(data => {
         console.log('Fetched data:', data); // Debugging: log fetched data
-        const filteredData = data.filter(car => car.siteName === 'Tarnowiak');
+        const filteredData = data.filter(car => car.siteName === 'OLX');
         console.log('Filtered data:', filteredData); // Debugging: log filtered data
         setCarData(filteredData);
       })
@@ -21,7 +21,7 @@ function Tarnowiak() {
 
     eventSource.onmessage = function(event) {
       const newCar = JSON.parse(event.data);
-      if (newCar.siteName === 'Tarnowiak') {
+      if (newCar.siteName === 'OLX') {
         setCarData(prevCarData => [...prevCarData, newCar]);
       }
     };
@@ -65,7 +65,7 @@ function Tarnowiak() {
 
   return (
     <div className="sectionBody">
-      <h2>Tarnowiak</h2>
+      <h2>OLX</h2>
       <div className="sectionBar" ref={sectionBarRef}>
         {carData.length === 0 ? (
           <p>No cars available</p> // Display message if no cars are available
@@ -88,4 +88,4 @@ function Tarnowiak() {
   );
 }
 
-export default Tarnowiak;
+export default OLX;

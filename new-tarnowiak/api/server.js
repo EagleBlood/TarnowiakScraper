@@ -3,7 +3,7 @@ import cors from "cors";
 import CarData from "./data/carData.js";
 import Car from "./data/car.js";
 
-const app = express();
+const app = express(); 
 const port = 4000;
 
 const carData = new CarData();
@@ -25,19 +25,20 @@ app.get('/api/data', (req, res) => {
 });
 
 app.post('/api/carData', (req, res) => {
-  const { url, car_name, price, date_added, link, imgLink } = req.body;
+  const { url, site_name, car_name, price, date_added, link, imgLink } = req.body;
   const newCar = new Car(
     carData.cars.length + 1,
+    site_name,
     car_name,
     price,
     date_added,
     link,
     imgLink
   );
-  carData.addCar(newCar);
+  carData.addCar(newCar);  
   res.status(201).send('Car added');
-  sendSSEUpdate(newCar);
-  console.log('Received data:', newCar); 
+  sendSSEUpdate(newCar); 
+  console.log('Received data:', newCar);  
 });
 
 app.get('/api/updates', (req, res) => {

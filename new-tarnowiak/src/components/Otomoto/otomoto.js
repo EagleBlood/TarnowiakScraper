@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-function Tarnowiak() {
+function Otomoto() {
   const [carData, setCarData] = useState([]);
   const sectionBarRef = useRef(null); // Define the ref
 
@@ -9,19 +9,17 @@ function Tarnowiak() {
     fetch('http://localhost:4000/api/carData')
       .then(response => response.json())
       .then(data => {
-        console.log('Fetched data:', data); // Debugging: log fetched data
-        const filteredData = data.filter(car => car.siteName === 'Tarnowiak');
-        console.log('Filtered data:', filteredData); // Debugging: log filtered data
+        const filteredData = data.filter(car => car.siteName === 'Otomoto');
         setCarData(filteredData);
-      })
-      .catch(error => console.error('Error fetching data:', error)); // Debugging: log fetch error
+      });
+
 
     // Set up EventSource to listen for updates
     const eventSource = new EventSource('http://localhost:4000/api/updates');
 
     eventSource.onmessage = function(event) {
       const newCar = JSON.parse(event.data);
-      if (newCar.siteName === 'Tarnowiak') {
+      if (newCar.siteName === 'Otomoto') {
         setCarData(prevCarData => [...prevCarData, newCar]);
       }
     };
@@ -65,7 +63,7 @@ function Tarnowiak() {
 
   return (
     <div className="sectionBody">
-      <h2>Tarnowiak</h2>
+      <h2>Otomoto</h2>
       <div className="sectionBar" ref={sectionBarRef}>
         {carData.length === 0 ? (
           <p>No cars available</p> // Display message if no cars are available
@@ -77,7 +75,7 @@ function Tarnowiak() {
               </a>
               <div className="sectionBarItemInfo">
                 <p>{car.carName}</p>
-                <strong>{car.carDate}</strong>
+                <strong>{car.carDate ? car.carDate : "Brak daty"}</strong>
                 <p>Cena: {car.carPrice}</p>
               </div>
             </div>
@@ -88,4 +86,4 @@ function Tarnowiak() {
   );
 }
 
-export default Tarnowiak;
+export default Otomoto;
