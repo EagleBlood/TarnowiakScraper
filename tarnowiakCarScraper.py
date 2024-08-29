@@ -274,6 +274,10 @@ def scrape_olx(url, site_name):
         else:
             location_date = "Unknown"
 
+        # Check if the date is "Dzisiaj o yy:yy"
+        if "Dzisiaj o" not in location_date:
+            continue
+
         # Extract the image link
         img_tag = card.find('img')
         img_link = img_tag['src'] if img_tag else "Unknown"
