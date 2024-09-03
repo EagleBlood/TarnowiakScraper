@@ -28,6 +28,7 @@ app.post('/api/carData', (req, res) => {
   const { url, site_name, car_name, price, date_added, link, imgLink } = req.body;
   const newCar = new Car(
     carData.cars.length + 1,
+    url,
     site_name,
     car_name,
     price,
@@ -75,4 +76,4 @@ function sendSSEUpdate(newCar) {
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
-});
+});  

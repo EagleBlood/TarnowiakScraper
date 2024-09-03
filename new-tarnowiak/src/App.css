@@ -131,3 +131,40 @@ a:visited .img {
 .App-link {
   color: #61dafb;
 }
+
+.box {
+  position: absolute;
+  padding: 10px 15px;
+  background-color: #C5A1A1;
+  border-radius: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
+  user-select: none; /* Prevent text selection */
+  font-size: 18px;
+  color: white;
+  margin: -15px;
+  cursor: pointer;
+}
+
+.boxBack {
+  position: absolute;
+  right: 30px;
+  padding: 10px 15px;
+  background-color: #C5A1A1;
+  border-radius: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Add shadow */
+  user-select: none; /* Prevent text selection */
+  font-size: 18px;
+  color: white;
+  margin: 15px; /* Remove margin */
+  cursor: pointer;
+}
+
+.box p {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: inherit;
+  line-height: inherit;
+  color: inherit;
+  background: none;
+}

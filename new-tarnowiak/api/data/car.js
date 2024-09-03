@@ -1,7 +1,8 @@
 // data/car.js
 class Car {
-    constructor(id, siteName, carName, carPrice, carDate, carLink, carImg) {
+    constructor(id, url, siteName, carName, carPrice, carDate, carLink, carImg) {
       this.id = id;
+      this.url = url;
       this.siteName = siteName;
       this.carName = carName;
       this.carPrice = carPrice;

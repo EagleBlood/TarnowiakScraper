@@ -51,6 +51,24 @@ function Tarnowiak() {
     }
   };
 
+  const scrollToStart = () => {
+    if (sectionBarRef.current) {
+      sectionBarRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollToEnd = () => {
+    if (sectionBarRef.current) {
+      sectionBarRef.current.scrollTo({
+        left: sectionBarRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   useEffect(() => {
     const sectionBar = sectionBarRef.current;
     if (sectionBar) {
@@ -67,6 +85,8 @@ function Tarnowiak() {
     <div className="sectionBody">
       <h2>Tarnowiak</h2>
       <div className="sectionBar" ref={sectionBarRef}>
+        <div className="box" onClick={scrollToStart}><p>&lt;</p></div>
+        <div className="boxBack" onClick={scrollToEnd}><p>&gt;</p></div>
         {carData.length === 0 ? (
           <p>No cars available</p> // Display message if no cars are available
         ) : (

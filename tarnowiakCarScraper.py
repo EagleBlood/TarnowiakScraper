@@ -5,6 +5,7 @@ import time
 from urllib.parse import urljoin
 from colorama import Fore, Style, init
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
 
 # Initialize colorama
 init(autoreset=True)
@@ -32,12 +33,13 @@ sites = [
             'https://www.tarnowiak.pl/ogloszenia/motoryzacja/volkswagen/',
             'https://www.tarnowiak.pl/ogloszenia/motoryzacja/inne-marki/'
         ],
-        'scrape_function': 'scrape_tarnowiak'
+        'scrape_function': 'scrape_tarnowiak1'
     },
     {
         'name': 'Otomoto',
         'urls': [
             'https://www.otomoto.pl/osobowe/tarnow?search%5Bdist%5D=50&search%5Border%5D=created_at_first%3Adesc',
+            'https://www.otomoto.pl/osobowe/honda/prelude?search%5Border%5D=created_at_first%3Adesc',
         ],
         'scrape_function': 'scrape_otomoto'
     },
@@ -45,6 +47,7 @@ sites = [
         'name': 'OLX',
         'urls': [
             'https://www.olx.pl/motoryzacja/samochody/tarnow/?search%5Bdist%5D=50&search%5Border%5D=created_at:desc',
+            'https://www.olx.pl/motoryzacja/samochody/q-honda-prelude-iv/?search%5Border%5D=created_at:desc',
         ],
         'scrape_function': 'scrape_olx'
     }
@@ -239,9 +242,9 @@ def scrape_olx(url, site_name):
     # Find all cards with the specified data-cy attribute
     cards = soup.find_all('div', {'data-cy': 'l-card'})
 
-    for card in cards[:5]:
+    for card in cards: # Cannot load more as it won't load more then 5 imgs
         # Skip the card if it has a "Wyróżnione" tag
-        if card.find('span', text='Wyróżnione'):
+        if card.find('span', string='Wyróżnione'):
             continue
 
         # Extract the car name
@@ -271,12 +274,15 @@ def scrape_olx(url, site_name):
             location_date_parts = location_date_text.split(' - ')
             # Concatenate the location and date to form a single string
             location_date = ' - '.join(location_date_parts) if len(location_date_parts) > 1 else location_date_text
+
+            # Adjust the time if it contains "Dzisiaj o"
+            if "Dzisiaj o" in location_date:
+                time_part = location_date.split('Dzisiaj o ')[1]
+                time_obj = datetime.strptime(time_part, '%H:%M')
+                adjusted_time = (time_obj + timedelta(hours=2)).strftime('%H:%M')
+                location_date = location_date.replace(time_part, adjusted_time)
         else:
             location_date = "Unknown"
-
-        # Check if the date is "Dzisiaj o yy:yy"
-        if "Dzisiaj o" not in location_date:
-            continue
 
         # Extract the image link
         img_tag = card.find('img')
