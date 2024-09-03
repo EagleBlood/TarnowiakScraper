@@ -35,47 +35,34 @@ sites = [
         'scrape_function': 'scrape_tarnowiak'
     },
     {
-        'name': 'Otomoto',
+        'name': 'AnotherSite',
         'urls': [
             'https://www.otomoto.pl/osobowe/tarnow?search%5Bdist%5D=50&search%5Border%5D=created_at_first%3Adesc',
-            'https://www.otomoto.pl/osobowe/honda/prelude?search%5Border%5D=created_at_first%3Adesc',
-            # 'https://www.otomoto.pl/osobowe/honda/integra?search%5Border%5D=created_at_first%3Adesc',
         ],
-        'scrape_function': 'scrape_otomoto'
-    },
-    {
-        'name': 'OLX',
-        'urls': [
-            'https://www.olx.pl/motoryzacja/samochody/tarnow/?search%5Bdist%5D=50&search%5Border%5D=created_at:desc',
-            'https://www.olx.pl/motoryzacja/samochody/q-honda-prelude-iv/?search%5Border%5D=created_at:desc',
-            # 'https://www.olx.pl/motoryzacja/samochody/q-honda-integra/?search%5Border%5D=created_at:desc',
-        ],
-        'scrape_function': 'scrape_olx'
+        'scrape_function': 'scrape_another_site'
     }
 ]
 
 seen_entries = {site['name']: {url: set() for url in site['urls']} for site in sites}
 
-# Define a list of colors for the sites
-site_colors = [Fore.RED, Fore.GREEN, Fore.BLUE]
+# Define a list of colors
+colors = [
+    Fore.RED, Fore.GREEN, Fore.YELLOW, Fore.BLUE, Fore.MAGENTA, Fore.CYAN, Fore.WHITE,
+    Fore.LIGHTBLACK_EX, Fore.LIGHTRED_EX, Fore.LIGHTGREEN_EX, Fore.LIGHTYELLOW_EX, Fore.LIGHTBLUE_EX,
+    Fore.LIGHTMAGENTA_EX, Fore.LIGHTCYAN_EX, Fore.LIGHTWHITE_EX
+]
 
-# Create a dictionary to map each site name to a specific color
-site_name_to_color = {site['name']: site_colors[i % len(site_colors)] for i, site in enumerate(sites)}
-
-# Define headers with a User-Agent
-headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-}
+# Create a dictionary to map each URL to a specific color
+url_colors = {url: colors[i % len(colors)] for site in sites for i, url in enumerate(site['urls'])}
 
 def scrape_tarnowiak(url, site_name):
     global seen_entries
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)  # Set a timeout of 10 seconds
+        response = requests.get(url, timeout=10)  # Set a timeout of 10 seconds
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-        # print(f"Successfully retrieved the webpage for URL: {url}")
     except requests.exceptions.RequestException as e:
-        # print(f"Failed to retrieve the webpage. Error: {e} for URL: {url}")
+        print(f"Failed to retrieve the webpage. Error: {e} for URL: {url}")
         return
 
     # Parse the HTML content using BeautifulSoup
@@ -123,12 +110,11 @@ def scrape_tarnowiak(url, site_name):
             # Add the entry to the set of seen entries for this URL
             seen_entries[site_name][url].add(car_link)
 
-            # Get the color for the current site
-            color = site_name_to_color[site_name]
+            # Get the color for the current URL
+            color = url_colors[url]
 
-            # Print the extracted information with the site name in color
-            print(f"{color}Site Name: {site_name}")
-            print(f"URL: {url}")
+            # Print the extracted information with the URL in color
+            print(f"{color}URL: {url}")
             print(f"Car Name: {car_name}")
             print(f"Description: {car_desc}")
             print(f"Price: {car_price}")
@@ -140,7 +126,6 @@ def scrape_tarnowiak(url, site_name):
             # Send the data to the Node.js server
             data = {
                 'url': url,
-                'site_name': site_name,
                 'car_name': car_name,
                 'description': car_desc,
                 'price': car_price,
@@ -154,15 +139,14 @@ def scrape_tarnowiak(url, site_name):
             except requests.exceptions.RequestException as e:
                 print(f"Failed to send data to the server. Error: {e}")
 
-def scrape_otomoto(url, site_name):
+def scrape_another_site(url, site_name):
     global seen_entries
 
     try:
-        response = requests.get(url, headers=headers, timeout=10)  # Set a timeout of 10 seconds
+        response = requests.get(url, timeout=10)  # Set a timeout of 10 seconds
         response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-        # print(f"Successfully retrieved the webpage for URL: {url}")
     except requests.exceptions.RequestException as e:
-        # print(f"Failed to retrieve the webpage. Error: {e} for URL: {url}")
+        print(f"Failed to retrieve the webpage. Error: {e} for URL: {url}")
         return
 
     # Parse the HTML content using BeautifulSoup
@@ -192,21 +176,18 @@ def scrape_otomoto(url, site_name):
 
         # Extract the image link
         img_tag = article.find('img', class_='e17vhtca4 ooa-2zzg2s')
-        if not img_tag:
-            img_tag = article.find('img', class_='e9xldqm4 ooa-2zzg2s')
         full_img_link = img_tag['src'] if img_tag else "Unknown"
 
         # Check if the entry is new
-        if car_link not in seen_entries[site_name][url]:
-            # Add the entry to the set of seen entries for this site and URL
-            seen_entries[site_name][url].add(car_link)
+        if car_link not in seen_entries.get(site_name, set()):
+            # Add the entry to the set of seen entries for this site
+            seen_entries.setdefault(site_name, set()).add(car_link)
 
-            # Get the color for the current site
-            color = site_name_to_color[site_name]
+            # Get the color for the current URL
+            color = url_colors.get(url, Fore.WHITE)
 
-            # Print the extracted information with the site name in color
-            print(f"{color}Site Name: {site_name}")
-            print(f"URL: {url}")
+            # Print the extracted information with the URL in color
+            print(f"{color}URL: {url}")
             print(f"Car Name: {car_name}")
             print(f"Description: {car_desc}")
             print(f"Price: {car_price}")
@@ -217,7 +198,6 @@ def scrape_otomoto(url, site_name):
             # Send the data to the Node.js server
             data = {
                 'url': url,
-                'site_name': site_name,
                 'car_name': car_name,
                 'description': car_desc,
                 'price': car_price,
@@ -230,101 +210,6 @@ def scrape_otomoto(url, site_name):
             except requests.exceptions.RequestException as e:
                 print(f"Failed to send data to the server. Error: {e}")
 
-def scrape_olx(url, site_name):
-    global seen_entries
-
-    try:
-        response = requests.get(url, timeout=10)  # Set a timeout of 10 seconds
-        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
-        # print(f"Successfully retrieved the webpage for URL: {url}")
-    except requests.exceptions.RequestException as e:
-        # print(f"Failed to retrieve the webpage. Error: {e} for URL: {url}")
-        return
-
-    # Parse the HTML content using BeautifulSoup
-    soup = BeautifulSoup(response.content, 'html.parser')
-
-    # Find all cards with the specified data-cy attribute
-    cards = soup.find_all('div', {'data-cy': 'l-card'})
-
-    for card in cards[:5]:
-        # Skip the card if it has a "Wyróżnione" tag
-        if card.find('span', text='Wyróżnione'):
-            continue
-
-        # Extract the car name
-        car_name_tag = card.find('h6', class_='css-1wxaaza')
-        car_name = car_name_tag.text.strip() if car_name_tag else "Unknown"
-
-        # Extract the price
-        car_price_tag = card.find('p', {'data-testid': 'ad-price'})
-        car_price = car_price_tag.text.strip() if car_price_tag else "Unknown"
-        # Remove "do negocjacji" if present
-        if "do negocjacji" in car_price:
-            car_price = car_price.replace("do negocjacji", "").strip()
-
-        # Extract the description (if available)
-        car_desc = "Description not available"
-
-        # Extract the link (as a unique identifier)
-        car_link_tag = card.find('a', href=True)
-        car_link = car_link_tag['href'] if car_link_tag else "Unknown"
-        full_link = urljoin(url, car_link)
-
-        # Extract the location and date
-        location_date_tag = card.find('p', {'data-testid': 'location-date'})
-        if location_date_tag:
-            location_date_text = location_date_tag.text.strip()
-            # Split the text to isolate the location and date
-            location_date_parts = location_date_text.split(' - ')
-            # Concatenate the location and date to form a single string
-            location_date = ' - '.join(location_date_parts) if len(location_date_parts) > 1 else location_date_text
-        else:
-            location_date = "Unknown"
-
-        # Check if the date is "Dzisiaj o yy:yy"
-        if "Dzisiaj o" not in location_date:
-            continue
-
-        # Extract the image link
-        img_tag = card.find('img')
-        img_link = img_tag['src'] if img_tag else "Unknown"
-
-        # Check if the entry is new
-        if car_link not in seen_entries.get(site_name, {}).get(url, set()):
-            # Add the entry to the set of seen entries for this site and URL
-            seen_entries.setdefault(site_name, {}).setdefault(url, set()).add(car_link)
-
-            # Get the color for the current site
-            color = site_name_to_color[site_name]
-
-            # Print the extracted information with the site name in color
-            print(f"{color}Site Name: {site_name}")
-            print(f"URL: {url}")
-            print(f"Car Name: {car_name}")
-            print(f"Description: {car_desc}")
-            print(f"Price: {car_price}")
-            print(f"Link: {full_link}")
-            print(f"Image Link: {img_link}")
-            print(f"Location and Date: {location_date}")
-            print('-' * 40)
-
-            # Send the data to the Node.js server
-            data = {
-                'url': url,
-                'site_name': site_name,
-                'car_name': car_name,
-                'description': car_desc,
-                'price': car_price,
-                'date_added': location_date,
-                'link': full_link,
-                'imgLink': img_link,
-            }
-            try:
-                response = requests.post('http://localhost:4000/api/carData', json=data)
-                response.raise_for_status()
-            except requests.exceptions.RequestException as e:
-                print(f"Failed to send data to the server. Error: {e}")
 
 def scrape_site(site):
     for url in site['urls']:
@@ -347,4 +232,7 @@ def listener():
     except KeyboardInterrupt:
         print("Listener stopped.")
 
-listener()
+#listener()
+url = 'https://www.otomoto.pl/osobowe/tarnow?search%5Bdist%5D=50&search%5Border%5D=created_at_first%3Adesc'
+site_name = 'AnotherSite'
+scrape_another_site(url, site_name)
