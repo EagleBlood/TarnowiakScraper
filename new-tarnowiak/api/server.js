@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/data', (req, res) => {
   const data = {
-    message: 'Hello from the server!',
+    message: 'Hello from the server!', 
     items: [1, 2, 3, 4, 5]
   };
   res.json(data);
@@ -38,9 +38,9 @@ app.post('/api/carData', (req, res) => {
   );
   carData.addCar(newCar);  
   res.status(201).send('Car added');
-  sendSSEUpdate(newCar); 
+  sendSSEUpdate(newCar);
   console.log('Received data:', newCar);  
-});
+}); 
 
 app.get('/api/updates', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');

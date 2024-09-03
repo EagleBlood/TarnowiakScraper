@@ -3,6 +3,7 @@ import './App.css';
 import Tarnowiak from './components/Tarnowiak/tarnowiak';
 import Otomoto from './components/Otomoto/otomoto';
 import OLX from './components/OLX/olx';
+import SearchBar from './components/SearchBar/search';
 
 function App() {
   useEffect(() => {
@@ -39,6 +40,7 @@ function App() {
         <Tarnowiak />
         <OLX />
         <Otomoto />
+        <SearchBar />
       </div>
     </div>
   );
