@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-function Tarnowiak() {
+function Sprzedajemy() {
   const [carData, setCarData] = useState([]);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -12,7 +12,7 @@ function Tarnowiak() {
       .then(response => response.json())
       .then(data => {
         console.log('Fetched data:', data); // Debugging: log fetched data
-        const filteredData = data.filter(car => car.siteName === 'Tarnowiak');
+        const filteredData = data.filter(car => car.siteName === 'Sprzedajemy');
         console.log('Filtered data:', filteredData); // Debugging: log filtered data
         setCarData(filteredData);
       })
@@ -23,7 +23,7 @@ function Tarnowiak() {
 
     eventSource.onmessage = function(event) {
       const newCar = JSON.parse(event.data);
-      if (newCar.siteName === 'Tarnowiak') {
+      if (newCar.siteName === 'Sprzedajemy') {
         setCarData(prevCarData => [...prevCarData, newCar]);
       }
     };
@@ -43,13 +43,16 @@ function Tarnowiak() {
   const handleScroll = (event) => {
     if (sectionBarRef.current) {
       const delta = Math.sign(event.deltaY);
-      const itemWidth = sectionBarRef.current.querySelector('.sectionBarItem').clientWidth; // 30 is the gap between items
-      const scrollAmount = itemWidth + 30;
-      const scrollLeft = sectionBarRef.current.scrollLeft;
-      sectionBarRef.current.scrollTo({
-        left: scrollLeft + scrollAmount * delta,
-        behavior: 'smooth'
-      });
+      const item = sectionBarRef.current.querySelector('.sectionBarItem');
+      if (item) {
+        const itemWidth = item.clientWidth; // 30 is the gap between items
+        const scrollAmount = itemWidth + 30;
+        const scrollLeft = sectionBarRef.current.scrollLeft;
+        sectionBarRef.current.scrollTo({
+          left: scrollLeft + scrollAmount * delta,
+          behavior: 'smooth'
+        });
+      }
     }
   };
 
@@ -96,7 +99,7 @@ function Tarnowiak() {
 
   return (
     <div className="sectionBody">
-      <h2>Tarnowiak</h2>
+      <h2>Sprzedajemy</h2>
       <div className="sectionBar" ref={sectionBarRef}>
         {showLeftArrow && <div className="box" onClick={scrollToStart}><p>&lt;</p></div>}
         {showRightArrow && <div className="boxBack" onClick={scrollToEnd}><p>&gt;</p></div>}
@@ -121,4 +124,4 @@ function Tarnowiak() {
   );
 }
 
-export default Tarnowiak;
+export default Sprzedajemy;

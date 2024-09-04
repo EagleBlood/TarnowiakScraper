@@ -2,7 +2,11 @@ import React, { useEffect, useState, useRef } from 'react';
 
 function SearchBar() {
   const [carData, setCarData] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [searchQuery, setSearchQuery] = useState(''); // State for car name search query
+  const [searchQueryCity, setSearchQueryCity] = useState(''); // State for city name search query
+  const [searchQueryPrice, setSearchQueryPrice] = useState(''); // State for max price search query
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
   const sectionBarRef = useRef(null);
 
   useEffect(() => {
@@ -20,9 +24,7 @@ function SearchBar() {
 
     eventSource.onmessage = function(event) {
       const newCar = JSON.parse(event.data);
-
-    setCarData(prevCarData => [...prevCarData, newCar]);
-
+      setCarData(prevCarData => [...prevCarData, newCar]);
     };
 
     eventSource.onerror = function(err) {
@@ -53,27 +55,70 @@ function SearchBar() {
     }
   };
 
+  const scrollToStart = () => {
+    if (sectionBarRef.current) {
+      sectionBarRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollToEnd = () => {
+    if (sectionBarRef.current) {
+      sectionBarRef.current.scrollTo({
+        left: sectionBarRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const updateArrowVisibility = () => {
+    if (sectionBarRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = sectionBarRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth);
+    }
+  };
+
   useEffect(() => {
     const sectionBar = sectionBarRef.current;
     if (sectionBar) {
       sectionBar.addEventListener('wheel', handleScroll);
+      sectionBar.addEventListener('scroll', updateArrowVisibility);
+      updateArrowVisibility();
     }
     return () => {
       if (sectionBar) {
         sectionBar.removeEventListener('wheel', handleScroll);
+        sectionBar.removeEventListener('scroll', updateArrowVisibility);
       }
     };
-  }, []);
+  }, [carData]);
 
-  // Handle search input change
+  // Handle search input changes
   const handleSearchChange = (event) => {
     setSearchQuery(event.target.value);
   };
 
-  // Filter car data based on search query
-  const filteredCarData = carData.filter(car => 
-    car.carName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleSearchChangeCity = (event) => {
+    setSearchQueryCity(event.target.value);
+  };
+
+  const handleSearchChangePrice = (event) => {
+    setSearchQueryPrice(event.target.value);
+  };
+
+  // Filter car data based on search queries
+  const filteredCarData = carData.filter(car => {
+    const carPrice = parseFloat(car.carPrice.replace(/[^0-9.-]+/g, "")); // Convert price to number
+    const maxPrice = parseFloat(searchQueryPrice);
+    return (
+      car.carName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (!searchQueryCity || (car.carDate && car.carDate.toLowerCase().includes(searchQueryCity.toLowerCase()))) &&
+      (!searchQueryPrice || carPrice <= maxPrice)
+    );
+  });
 
   return (
     <div className="sectionBody">
@@ -84,7 +129,21 @@ function SearchBar() {
         value={searchQuery} 
         onChange={handleSearchChange}  
       />
+      <input 
+        type="text" 
+        placeholder="Search by city name" 
+        value={searchQueryCity} 
+        onChange={handleSearchChangeCity}  
+      />
+      <input 
+        type="number" 
+        placeholder="Search by max price" 
+        value={searchQueryPrice} 
+        onChange={handleSearchChangePrice}  
+      />
       <div className="sectionBar" ref={sectionBarRef}>
+        {showLeftArrow && <div className="box" onClick={scrollToStart}><p>&lt;</p></div>}
+        {showRightArrow && <div className="boxBack" onClick={scrollToEnd}><p>&gt;</p></div>}
         {filteredCarData.length === 0 ? (
           <p>No cars available</p>
         ) : (

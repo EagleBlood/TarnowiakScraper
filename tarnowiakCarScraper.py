@@ -5,6 +5,7 @@ import time
 from urllib.parse import urljoin
 from colorama import Fore, Style, init
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
 
 # Initialize colorama
 init(autoreset=True)
@@ -37,7 +38,7 @@ sites = [
     {
         'name': 'Otomoto',
         'urls': [
-            'https://www.otomoto.pl/osobowe/tarnow?search%5Bdist%5D=50&search%5Border%5D=created_at_first%3Adesc',
+            'https://www.otomoto.pl/osobowe/tarnow?search%5Bdist%5D=120&search%5Border%5D=created_at_first%3Adesc',
             'https://www.otomoto.pl/osobowe/honda/prelude?search%5Border%5D=created_at_first%3Adesc',
             # 'https://www.otomoto.pl/osobowe/honda/integra?search%5Border%5D=created_at_first%3Adesc',
         ],
@@ -46,18 +47,26 @@ sites = [
     {
         'name': 'OLX',
         'urls': [
-            'https://www.olx.pl/motoryzacja/samochody/tarnow/?search%5Bdist%5D=50&search%5Border%5D=created_at:desc',
+            'https://www.olx.pl/motoryzacja/samochody/tarnow/?search%5Bdist%5D=120&search%5Border%5D=created_at:desc',
             'https://www.olx.pl/motoryzacja/samochody/q-honda-prelude-iv/?search%5Border%5D=created_at:desc',
             # 'https://www.olx.pl/motoryzacja/samochody/q-honda-integra/?search%5Border%5D=created_at:desc',
         ],
         'scrape_function': 'scrape_olx'
+    },
+    {
+        'name': 'Sprzedajemy',
+        'urls': [
+            'https://sprzedajemy.pl/tarnow/motoryzacja/samochody-osobowe?inp_distance=120'
+            'https://sprzedajemy.pl/szukaj?inp_category_id=2&inp_category_id=6&inp_category_id=583&inp_category_id=802&catCode=6bea9f&inp_location_id=1&inp_location_id=0&inp_seller_type_id=&inp_condition_id=&inp_price%5Bfrom%5D=&inp_price%5Bto%5D=&inp_last_days=&inp_attribute_1600%5Bfrom%5D=&inp_attribute_1600%5Bto%5D=&inp_attribute_1605=&inp_attribute_466%5Bfrom%5D=&inp_attribute_466%5Bto%5D=&inp_attribute_471%5Bto%5D=&inp_attribute_222=&inp_attribute_476%5Bfrom%5D=&inp_attribute_476%5Bto%5D=&inp_attribute_456%5Bfrom%5D=&inp_attribute_456%5Bto%5D=&inp_attribute_461=&inp_attribute_491=&inp_category_id=802&inp_location_id=1&sort=inp_srt_date_d&items_per_page=30',
+        ],
+        'scrape_function': 'scrape_sprzedajemy'
     }
 ]
 
 seen_entries = {site['name']: {url: set() for url in site['urls']} for site in sites}
 
 # Define a list of colors for the sites
-site_colors = [Fore.RED, Fore.GREEN, Fore.BLUE]
+site_colors = [Fore.RED, Fore.GREEN, Fore.BLUE, Fore.YELLOW]
 
 # Create a dictionary to map each site name to a specific color
 site_name_to_color = {site['name']: site_colors[i % len(site_colors)] for i, site in enumerate(sites)}
@@ -279,6 +288,13 @@ def scrape_olx(url, site_name):
             location_date_parts = location_date_text.split(' - ')
             # Concatenate the location and date to form a single string
             location_date = ' - '.join(location_date_parts) if len(location_date_parts) > 1 else location_date_text
+
+            # Adjust the time if it contains "Dzisiaj o"
+            if "Dzisiaj o" in location_date:
+                time_part = location_date.split('Dzisiaj o ')[1]
+                time_obj = datetime.strptime(time_part, '%H:%M')
+                adjusted_time = (time_obj + timedelta(hours=2)).strftime('%H:%M')
+                location_date = location_date.replace(time_part, adjusted_time)
         else:
             location_date = "Unknown"
 
@@ -319,6 +335,94 @@ def scrape_olx(url, site_name):
                 'date_added': location_date,
                 'link': full_link,
                 'imgLink': img_link,
+            }
+            try:
+                response = requests.post('http://localhost:4000/api/carData', json=data)
+                response.raise_for_status()
+            except requests.exceptions.RequestException as e:
+                print(f"Failed to send data to the server. Error: {e}")
+
+def scrape_sprzedajemy(url, site_name):
+    global seen_entries
+
+    try:
+        response = requests.get(url, headers=headers, timeout=10)  # Set a timeout of 10 seconds
+        response.raise_for_status()  # Raise an HTTPError for bad responses (4xx and 5xx)
+    except requests.exceptions.RequestException as e:
+        print(f"Failed to retrieve the webpage. Error: {e} for URL: {url}")
+        return
+
+    # Parse the HTML content using BeautifulSoup
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Find all articles with the class 'element'
+    articles = soup.find_all('article', class_='element')
+
+    # Loop through each article and extract the required information
+    for article in articles:
+        # Extract the car name
+        car_name_tag = article.find('h2', class_='title').find('a')
+        car_name = car_name_tag.text.strip() if car_name_tag else "Unknown"
+
+        # Extract the price
+        car_price_tag = article.find('span', class_='price')
+        car_price = car_price_tag.text.strip() if car_price_tag else "Unknown"
+
+        # Extract the link (as a unique identifier)
+        car_link_tag = article.find('a', class_='offerLink', href=True)
+        car_link = car_link_tag['href'] if car_link_tag else "Unknown"
+        full_link = urljoin(url, car_link)
+
+        # Extract the image link
+        img_tag = article.find('img')
+        img_link = img_tag['src'] if img_tag else "Unknown"
+
+        # Extract the date and time
+        car_date_tag = article.find('time', class_='time')
+        car_date = car_date_tag['datetime'] if car_date_tag else "Unknown"
+
+        # Extract the location
+        location_tag = article.find('strong', class_='city')
+        location = location_tag.text.strip() if location_tag else "Unknown"
+
+        # Format the date and time
+        if car_date != "Unknown":
+            date_obj = datetime.strptime(car_date, "%Y-%m-%d %H:%M:%S")
+            formatted_date = date_obj.strftime("%m-%d %H:%M")
+        else:
+            formatted_date = "Unknown"
+
+        # Combine location with formatted date and time
+        location_date = f"{location} - {formatted_date}"
+
+        # Check if the entry is new
+        if car_link not in seen_entries[site_name][url]:
+            # Add the entry to the set of seen entries for this URL
+            seen_entries[site_name][url].add(car_link)
+
+            # Get the color for the current site
+            color = site_name_to_color[site_name]
+
+            # Print the extracted information with the site name in color
+            print(f"{color}Site Name: {site_name}")
+            print(f"URL: {url}")
+            print(f"Car Name: {car_name}")
+            print(f"Price: {car_price}")
+            print(f"Date Added: {location_date}")
+            print(f"Link: {full_link}")
+            print(f"Image Link: {img_link}")
+            print('-' * 40)
+
+            # Send the data to the Node.js server
+            data = {
+                'url': url,
+                'site_name': site_name,
+                'car_name': car_name,
+                'price': car_price,
+                'date_added': location_date,
+                'location': location,
+                'link': full_link,
+                'imgLink': img_link
             }
             try:
                 response = requests.post('http://localhost:4000/api/carData', json=data)

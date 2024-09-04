@@ -2,7 +2,9 @@ import React, { useEffect, useState, useRef } from 'react';
 
 function OLX() {
   const [carData, setCarData] = useState([]);
-  const sectionBarRef = useRef(null); // Define the ref
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+  const sectionBarRef = useRef(null);
 
   useEffect(() => {
     // Fetch initial car data
@@ -51,22 +53,53 @@ function OLX() {
     }
   };
 
+  const scrollToStart = () => {
+    if (sectionBarRef.current) {
+      sectionBarRef.current.scrollTo({
+        left: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const scrollToEnd = () => {
+    if (sectionBarRef.current) {
+      sectionBarRef.current.scrollTo({
+        left: sectionBarRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const updateArrowVisibility = () => {
+    if (sectionBarRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = sectionBarRef.current;
+      setShowLeftArrow(scrollLeft > 0);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth);
+    }
+  };
+
   useEffect(() => {
     const sectionBar = sectionBarRef.current;
     if (sectionBar) {
       sectionBar.addEventListener('wheel', handleScroll);
+      sectionBar.addEventListener('scroll', updateArrowVisibility);
+      updateArrowVisibility();
     }
     return () => {
       if (sectionBar) {
         sectionBar.removeEventListener('wheel', handleScroll);
+        sectionBar.removeEventListener('scroll', updateArrowVisibility);
       }
     };
-  }, []);
+  }, [carData]);
 
   return (
     <div className="sectionBody">
       <h2>OLX</h2>
       <div className="sectionBar" ref={sectionBarRef}>
+        {showLeftArrow && <div className="box" onClick={scrollToStart}><p>&lt;</p></div>}
+        {showRightArrow && <div className="boxBack" onClick={scrollToEnd}><p>&gt;</p></div>}
         {carData.length === 0 ? (
           <p>No cars available</p> // Display message if no cars are available
         ) : (
